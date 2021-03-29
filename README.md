@@ -46,7 +46,7 @@ Using the built instruction provided with the packages (plus the remarks below) 
 - I have built obs with the Chromium Extension Framework CEF; no cross effects to nvmpi there as expected
 - Obs sometimes complains about missing libraries libobs-frontend-api.so.0 or libobs-opengl.so.0. I cured this by creating links to libobs-frontend-api.so.0.0 resp. libobs-opengl.so.0.0 in /usr/local/bin
 
-At this point the self build obs-studio will **not yet** offer nvidia nvmpi when checking in settings->output->output mode = advanced, but obs itself should work fine with software encoding, and StreamFX should show up in the obs menu. 
+At this point the self built obs-studio will **not yet** offer nvidia nvmpi when checking in settings->output->output mode = advanced, but obs itself should work fine with software encoding, and StreamFX should show up in the obs menu. 
 
 ## Integrating nvmpi encoder into StreamFX and obs-studio
 
