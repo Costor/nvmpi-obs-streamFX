@@ -5,15 +5,15 @@ nvidia nvmpi encoder for streamFX and obs-studio (e.g. for nvidia jetson. Requir
 This is a documentation plus the source files I created / modified in order to build a version of [obs-studio](https://obsproject.com) that uses the nvidia nvmpi hardware encoder available e.g. on the nvidia jetson series (at least on the jetson series, nvidia nvmpi replaces the well known nvenc hardware encoder).
 It relies on the integration of [nvmpi into ffmpeg](https://github.com/jocover/jetson-ffmpeg) and on the [obs-StreamFX plugin](https://github.com/Xaymar/obs-StreamFX) to make the nvmpi hardware encoder available in obs-studio. 
 
-To this end I had to add a handler for nvmpi to StreamFX which I provide here for the benefit of whoever wants to build nvmpi support into obs-StreamFX (it is essentially a slightly modified copy of StreamFX's nvenc handler). 
+To this end I had to add a handler for nvmpi to StreamFX which I provide here for the benefit of whoever wants to build nvmpi support into obs-StreamFX (it is essentially just a slightly modified copy of StreamFX's nvenc handler). 
 
 # Limitations
-This is not a maintained project, but documents the solution I built for me and am using as of February / March 2021 on nvidia jetson nano 4GB with Ubuntu 20.04  
-with the kind support of [Xaymar](https://github.com/Xaymar/obs-StreamFX/issues/470). It can not become part of the StreamFX package as least as long there is no maintainance which I cannot provide due to lack of capacity and resources. 
+This is not a maintained project, but documents the solution I built for me and am using as of February / March 2021 on nvidia jetson nano 4GB and Ubuntu 20.04 with the kind support of [Xaymar](https://github.com/Xaymar/obs-StreamFX/issues/470). 
+It can not become part of the StreamFX package as least as long there is no maintainance which I cannot provide due to lack of capacity and resources. 
 
-So as development of StreamFX, jetson-ffmpeg and obs-studio go on, you might be required to do modifications on your own. Also the nvmpi-into-ffmpeg integration is an ongoing effort which may have functional limitations. 
+So as development of StreamFX, jetson-ffmpeg and obs-studio continue, you might be required to do modifications on your own. Also the nvmpi-into-ffmpeg integration is an ongoing effort where functional limitations may exist. 
 
-No jetson specific dependencies have come to my attentaion, so it would probably work in other environments with nvmpi encoder hardware where an integration into ffmpeg / libavcodec exists.
+No jetson specific dependencies have come to my attention, so it would probably work in other environments with nvmpi encoder hardware where an integration into ffmpeg / libavcodec exists.
 
 # Documentation
 
@@ -41,23 +41,23 @@ Using the built instruction provided with the packages (plus the remarks below) 
 	
 - I used StreamFX as a frontend-plugin, i.e. put the StreamFX sources into ~/obs-studio/UI/frontend-plugins (assuming that ~/obs-studio holds the obs build environment)
 - StreamFX requires C++17 so GCC/G++ 9 is required. (This poses no problem with cuda 10.2 as on Linux neither obs nor StreamFX compile cuda sources. Obs and StreamFX actually compiled with with GCC/G++ 8, however I experienced the [GCC 8 'filesystem' segfault bug](https://bugs.launchpad.net/ubuntu/+source/gcc-8/+bug/1824721)) 
-- In order to avoid conflicts with the obs-studio standard package that ubuntu provides I chose /usr/local/ as the installation location for the self-built obs by having the option -DCMAKE_INSTALL_PREFIX=/usr/local in the cmake statement 
-- Also in cmake the option -DCMAKE_CXX_FLAGS="-fPIC" was required (as with jetson-ffmpeg) for correctly linking in arm64/aarch64 Linux and GCC/G++.
-- I have built obs with the Chromium Extension Framework CEF.
-- Obs sometimes complains about missing libobs-frontend-api.so.0 or libobs-opengl.so.0. I cured this by creating links to libobs-frontend-api.so.0.0 resp. libobs-opengl.so.0.0 in /usr/local/bin
+- In order to avoid conflicts with the obs-studio standard package that ubuntu provides I chose /usr/local/ as the installation location for the self-built obs by modifying the option -DCMAKE_INSTALL_PREFIX=/usr/local in the cmake statement 
+- Also in the cmake statement the option -DCMAKE_CXX_FLAGS="-fPIC" needed to be added (as with jetson-ffmpeg) for correctly linking in arm64/aarch64 Linux and GCC/G++.
+- I have built obs with the Chromium Extension Framework CEF; no cross effects to nvmpi there as expected
+- Obs sometimes complains about missing libraries libobs-frontend-api.so.0 or libobs-opengl.so.0. I cured this by creating links to libobs-frontend-api.so.0.0 resp. libobs-opengl.so.0.0 in /usr/local/bin
 
-At this point the self build obs-studio will **not yet** offer nvidia nvmpi when checking in settings->output->output mode = advanced, but software encoding should work fine.
+At this point the self build obs-studio will **not yet** offer nvidia nvmpi when checking in settings->output->output mode = advanced, but obs itself should work fine with software encoding, and StreamFX should show up in the obs menu. 
 
 ## Integrating nvmpi encoder into StreamFX and obs-studio
 
-- The six source files nvmpi* form the nvmpi handler (analogously to StreamFX's nvenc handler) and need to be placed in ~/obs-studio/UI/frontend-plugins/streamfx/source/encoders/handlers
-- Compare the file CMakeLists.txt with ~/obs-studio/UI/frontend-plugins/streamfx/CMakeLists.txt (=i.e. the build description for StreamFX), search for 'nvmpi' and integrate the additions I made into the current version
-- In ~/obs-studio/UI/frontend-plugins/streamfx/source/encoders/encoder-ffmpeg.cpp two lines need to be added directly below the corresponding #includes for nvenc, i.e. below  '#include "handlers/nvenc_hevc_handler.hpp"':
+- The six source files nvmpi* form the nvmpi handler (analogously to StreamFX's nvenc handler). Place them in ~/obs-studio/UI/frontend-plugins/streamfx/source/encoders/handlers beside the nvenc* files.
+- Search the file CMakeLists.txt for 'nvmpi' and transfer the lines over into ~/obs-studio/UI/frontend-plugins/streamfx/CMakeLists.txt, i.e. the build description of the current StreamFX, in an adequate way.
+- In ~/obs-studio/UI/frontend-plugins/streamfx/source/encoders/encoder-ffmpeg.cpp the folowing two lines need to be added directly below the corresponding #includes for nvenc, i.e. below  '#include "handlers/nvenc_hevc_handler.hpp"':
 ```
 #include "handlers/nvmpi_h264_handler.hpp" 
 #include "handlers/nvmpi_hevc_handler.hpp"
 ```
-- and another two in function ffmpeg_manager::ffmpeg_manager() below the line '#ifdef ENABLE_ENCODER_FFMPEG_NVENC':
+- and two lines below should be added in function ffmpeg_manager::ffmpeg_manager() below the line '#ifdef ENABLE_ENCODER_FFMPEG_NVENC':
 ```
 register_handler("h264_nvmpi", ::std::make_shared<handler::nvmpi_h264_handler>());
 register_handler("hevc_nvmpi", ::std::make_shared<handler::nvmpi_hevc_handler>());
