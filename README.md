@@ -27,7 +27,7 @@ Using the built instruction provided with the packages (plus the remarks below) 
  - [StreamFX](https://github.com/Xaymar/obs-StreamFX)
 
 		
-### Remarks on building ffmpeg:
+### Remarks on building jetson-ffmpeg:
 
 - I used GCC/G++ version 8 for the compile as the nvidia cuda 10.2 provided with the jetson requires GCC/G++ 8
 - I also found that the compiler flag -fPIC was required in the build configuration statement if on arm64/aarch64 Linux:
@@ -37,13 +37,27 @@ Using the built instruction provided with the packages (plus the remarks below) 
 - In order to avoid conflicts with the ffmpeg standard package that ubuntu provides I left the installation prefix /usr/local/ as the installation default. This will install libavcodec.so etc into /usr/local/lib. However if there are other libav* versions in the system (e.g. from a standard ffmpeg  in /usr/lib) it is important to force the correct search order for these libraries e.g. by inserting /usr/local/bin at the beginning of the library search path LD_LIBRARY_PATH.
 - You should test this ffmpeg as described in the building instructions to verify that nvmpi encoders work properly
 
-### Remarks on building obs-studio with StreamFX:
+### Remarks on building Browser source for obs-studio
+
+- Browser source is (of course) not required for hardware encoding in obs, so you can omit it. If you want to use it: the build instructions are not valid for ARM based devices like the jetson. For ARM64 devices like the jetson replace them by the following steps:
+1) The key thing is to download the correct "Chrome embedded Framework" for Linux-arm64 from [CEF Builds](https://cef-builds.spotifycdn.com/index.html). Make sure you chose the "Linux-ARM64" tab, and the 'minimal distribution' from the 'stable build' (so do not use the wget with download link provided by obs instructions, because that is for amd64 architecture - not helpful on an arm64 device)
+2) unpack it (using tar -xjf) to a directory of your choosing, e.g. ~/CEF-bin-min
+3) cd CEF-bin-min && mkdir build && cd build
+4) Do this cmake statement (see the explanation in CMakeLists.txt, but you need to add the architecture option):
+```
+cmake -G "Unix Makefiles" -DPROJECT_ARCH="arm64" -DCMAKE_BUILD_TYPE=Release
+```
+5) make -j3 cefsimple
+
+This should give you a Chrome embedded Framework ready for integration into obs-studio in ~/CEF-bin-min .
+
+### Remarks on building obs-studio with Browser source and StreamFX plugin:
 	
 - I used StreamFX as a frontend-plugin, i.e. put the StreamFX sources into ~/obs-studio/UI/frontend-plugins (assuming that ~/obs-studio holds the obs build environment)
 - StreamFX requires C++17 so GCC/G++ 9 is required. (This poses no problem with cuda 10.2 as on Linux neither obs nor StreamFX compile cuda sources. Obs and StreamFX actually compiled with with GCC/G++ 8, however I experienced the [GCC 8 'filesystem' segfault bug](https://bugs.launchpad.net/ubuntu/+source/gcc-8/+bug/1824721)) 
 - In order to avoid conflicts with the obs-studio standard package that ubuntu provides I chose /usr/local/ as the installation location for the self-built obs by modifying the option -DCMAKE_INSTALL_PREFIX=/usr/local in the cmake statement 
 - Also in the cmake statement the option -DCMAKE_CXX_FLAGS="-fPIC" needed to be added (as with jetson-ffmpeg) for correctly linking in arm64/aarch64 Linux and GCC/G++.
-- I have built obs with the Chromium Extension Framework CEF; no cross effects to nvmpi there as expected
+- I have built obs with the browser source which I built myself (see remark above). So the option in cmake statement needed to be  -DCEF_ROOT_DIR="../../CEF_binary_min"
 - Obs sometimes complains about missing libraries libobs-frontend-api.so.0 or libobs-opengl.so.0. I cured this by creating links to libobs-frontend-api.so.0.0 resp. libobs-opengl.so.0.0 in /usr/local/bin
 
 At this point the self built obs-studio will **not yet** offer nvidia nvmpi when checking in settings->output->output mode = advanced, but obs itself should work fine with software encoding, and StreamFX should show up in the obs menu. 
