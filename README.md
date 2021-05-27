@@ -8,10 +8,10 @@ It relies on the integration of [nvmpi into ffmpeg](https://github.com/jocover/j
 To this end I had to add a handler for nvmpi to StreamFX which I provide here for the benefit of whoever wants to build nvmpi support into obs-StreamFX (it is essentially just a slightly modified copy of StreamFX's nvenc handler). 
 
 # Limitations
-This is not a maintained project, but documents the solution I built for me and am using as of February / March 2021 on nvidia jetson nano 4GB and Ubuntu 20.04 with the kind support of [Xaymar](https://github.com/Xaymar/obs-StreamFX/issues/470). 
+This is not a maintained project, but documents the solution I built for me and am using as of February / March 2021 on nvidia jetson nano 4GB and Ubuntu 20.04 with the kind support of [Xaymar](https://github.com/Xaymar/obs-StreamFX/issues/470). It is based on version 10.0.alpha1 of StreamFX.
 It can not become part of the StreamFX package as least as long there is no maintainance which I cannot provide due to lack of capacity and resources. 
 
-So as development of StreamFX, jetson-ffmpeg and obs-studio continue, you might be required to do modifications on your own. Also the nvmpi-into-ffmpeg integration is an ongoing effort where functional limitations may exist. 
+So as development of StreamFX, jetson-ffmpeg and obs-studio continue, you might be required to do modifications on your own. Also the nvmpi-into-ffmpeg integration is an ongoing effort where functional limitations may exist. Status: As of 2021-05-13, the files provided no longer compile with the newer version of StreamFX, see the issue "D_DESC was not declared", so you have to make said adaptions. I currently have no capacity to update them myself.
 
 No jetson specific dependencies have come to my attention, so it would probably work in other environments with nvmpi encoder hardware where an integration into ffmpeg / libavcodec exists.
 
