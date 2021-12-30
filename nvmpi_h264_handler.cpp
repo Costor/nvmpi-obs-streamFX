@@ -136,9 +136,9 @@ void nvmpi_h264_handler::log_options(obs_data_t* settings, const AVCodec* codec,
 	nvmpi::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.264/AVC:", codec->name);
-	::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile",
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile",
 											 [](int64_t v, std::string_view o) { return std::string(o); });
-	::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level",
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level",
 											 [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
@@ -150,23 +150,23 @@ void nvmpi_h264_handler::get_encoder_properties(obs_properties_t* props, const A
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(props, P_H264, D_TRANSLATE(P_H264), OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(props, S_CODEC_H264, D_TRANSLATE(S_CODEC_H264), OBS_GROUP_NORMAL, grp);
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, KEY_PROFILE, D_TRANSLATE(P_H264_PROFILE), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(P_H264_PROFILE)));
+			obs_property_set_long_description(p, D_TRANSLATE(S_CODEC_H264_PROFILE));
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
 			for (auto const kv : profiles) {
-				std::string trans = std::string(P_H264_PROFILE) + "." + kv.second;
+				std::string trans = std::string(S_CODEC_H264_PROFILE) + "." + kv.second;
 				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, KEY_LEVEL, D_TRANSLATE(P_H264_LEVEL), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(P_H264_LEVEL)));
+			obs_property_set_long_description(p, D_TRANSLATE(S_CODEC_H264_LEVEL));
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
 			for (auto const kv : levels) {
 				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));

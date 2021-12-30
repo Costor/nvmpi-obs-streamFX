@@ -26,7 +26,7 @@ Using the built instruction provided with the packages (plus the remarks below) 
 
  - [StreamFX](https://github.com/Xaymar/obs-StreamFX)
 
-		
+
 ### Remarks on building jetson-ffmpeg:
 
 - I used GCC/G++ version 8 for the compile as the nvidia cuda 10.2 provided with the jetson requires GCC/G++ 8
@@ -52,7 +52,7 @@ cmake -G "Unix Makefiles" -DPROJECT_ARCH="arm64" -DCMAKE_BUILD_TYPE=Release
 This should give you a Chrome embedded Framework ready for integration into obs-studio in ~/CEF-bin-min .
 
 ### Remarks on building obs-studio with Browser source and StreamFX plugin:
-	
+
 - I used StreamFX as a frontend-plugin, i.e. put the StreamFX sources into ~/obs-studio/UI/frontend-plugins (assuming that ~/obs-studio holds the obs build environment)
 - StreamFX requires C++17 so GCC/G++ 9 is required. (This poses no problem with cuda 10.2 as on Linux neither obs nor StreamFX compile cuda sources. Obs and StreamFX actually compiled with with GCC/G++ 8, however I experienced the [GCC 8 'filesystem' segfault bug](https://bugs.launchpad.net/ubuntu/+source/gcc-8/+bug/1824721)) 
 - In order to avoid conflicts with the obs-studio standard package that ubuntu provides I chose /usr/local/ as the installation location for the self-built obs by modifying the option -DCMAKE_INSTALL_PREFIX=/usr/local in the cmake statement 
@@ -80,9 +80,90 @@ Then refresh the build system by re-doing the cmake step for obs-studio, and reb
 If everything went right nvmpi h264 and h265 will now be offered in obs when you choose settings->output->output mode = advanced. 
 
 Enjoy!
- 
+
 
 ### Footnote: Using obs with xrdp and VirtualGL
 
 Obs-studio requires OpenGL support. If you access your Linux Desktop from remote (e.g. via xrdp or vnc), openGL support will be via software (MESA) or non-existent. I found that using [VirtualGL](www.virtualGL.org) obs-studio runs reasonably well in a remote xrdp session in the same LAN, see [xrdp forum](https://github.com/neutrinolabs/xrdp/issues/1697#issuecomment-806578753). 
 
+Attachment : complete build instructions for build without browser support
+tested with Ubuntu 20.04, OBS 27, StreamFX 0.11.0 and ffmpeg n4.2.5
+
+# set directory where you want to build everything
+bd=~/nvmpi-obs
+
+# installation of libs for full build of ffmpeg, obs and streamfx
+sudo apt build-dep ffmpeg obs-studio
+sudo apt install libpci-dev qtbase5-private-dev clang clang-tidy clang-format
+
+# download, build and install libaom
+cd $bd
+git clone https://aomedia.googlesource.com/aom
+cd aom
+mkdir build
+cd build
+cmake ..
+make -j$(nproc)
+sudo make install
+
+# download and build jetson-ffmpeg
+cd $bd
+git clone https://github.com/jocover/jetson-ffmpeg.git
+cd jetson-ffmpeg
+mkdir build
+cd build
+cmake ..
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+
+# download and build ffmpeg (note : the build process take a while)
+cd $bd
+git clone git://source.ffmpeg.org/ffmpeg.git -b release/4.2 --depth=1
+cd ffmpeg
+wget https://github.com/jocover/jetson-ffmpeg/raw/master/ffmpeg_nvmpi.patch
+git apply ffmpeg_nvmpi.patch
+./configure --enable-nvmpi --extra-cxxflags=-fPIC --enable-shared
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+
+export LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
+
+# to test it
+ffmpeg -c:v h264_nvmpi -i <input_file> -f null -
+# or
+ffmpeg -i <input_file> -c:v h264_nvmpi <output.mp4>
+
+# download obs and streamfx
+cd $bd
+git clone --recursive https://github.com/obsproject/obs-studio.git
+cd obs-studio/UI/frontend-plugins
+git submodule add 'https://github.com/Xaymar/obs-StreamFX.git' streamfx
+git submodule update --init --recursive
+echo "add_subdirectory(streamfx)" >> CMakeLists.txt
+
+# download this git and patch streamfx"
+cd $bd
+git clone https://github.com/Costor/nvmpi-obs-streamFX
+cd nvmpi-obs-streamFX
+git checkout StreamFX-0.11.0
+cp nvmpi_* $bd/obs-studio/UI/frontend-plugins/streamfx/source/encoders/handlers
+
+# now you have 2 options to update files
+# option 1 : use the patch
+git apply streamfx.patch --unsafe-paths --directory=$bd/obs-studio/UI/frontend-plugins/streamfx
+
+# option 2 : overwrite by copy files from this git to streamfx
+cp encoder-ffmpeg.cpp $bd/obs-studio/UI/frontend-plugins/streamfx/source
+cp CMakeLists.txt $bd/obs-studio/UI/frontend-plugins/streamfx/
+
+# build obs
+cd $bd/obs-studio
+mkdir build
+cd build
+cmake -DUNIX_STRUCTURE=1 -DCMAKE_INSTALL_PREFIX=/usr/local -DENABLE_PIPEWIRE=OFF -DBUILD_BROWSER=OFF -DCMAKE_CXX_FLAGS="-fPIC" ..
+make -j$(nproc)
+sudo make install
+
+# everything except of ffmpeg test and option 2 of integrating is also in complete-build.sh

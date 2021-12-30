@@ -303,7 +303,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 
 static bool modified_aq(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 {   CHK(0);//PST
-	bool spatial_aq = util::is_tristate_enabled(obs_data_get_int(settings, KEY_AQ_SPATIAL));
+	bool spatial_aq = streamfx::util::is_tristate_enabled(obs_data_get_int(settings, KEY_AQ_SPATIAL));
 	obs_property_set_visible(obs_properties_get(props, KEY_AQ_STRENGTH), spatial_aq);
 	return true;
 }
@@ -312,7 +312,7 @@ void nvmpi::get_properties_pre(obs_properties_t* props, const AVCodec*)
 {   CHK(0);//PST
 	auto p =
 		obs_properties_add_list(props, KEY_PRESET, D_TRANSLATE(ST_PRESET), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_PRESET)));
+	obs_property_set_long_description(p, D_TRANSLATE(ST_PRESET));
 	for (auto kv : presets) {
 		obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 	}
@@ -330,7 +330,7 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p = obs_properties_add_list(grp, KEY_RATECONTROL_MODE, D_TRANSLATE(ST_RATECONTROL_MODE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_MODE)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_MODE));
 			obs_property_set_modified_callback(p, modified_ratecontrol);
 			for (auto kv : ratecontrolmodes) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
@@ -340,13 +340,13 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p =
 				util::obs_properties_add_tristate(grp, KEY_RATECONTROL_TWOPASS, D_TRANSLATE(ST_RATECONTROL_TWOPASS));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_TWOPASS)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_TWOPASS));
 		}
 
 		{
 			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_LOOKAHEAD,
 												   D_TRANSLATE(ST_RATECONTROL_LOOKAHEAD), -1, 32, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_LOOKAHEAD)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_LOOKAHEAD));
 			obs_property_int_set_suffix(p, " frames");
 			//obs_property_set_modified_callback(p, modified_lookahead);
 		}
@@ -354,13 +354,13 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_RATECONTROL_ADAPTIVEI,
 													   D_TRANSLATE(ST_RATECONTROL_ADAPTIVEI));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_ADAPTIVEI)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_ADAPTIVEI));
 		}
 
 		if (strcmp(codec->name, "h264_nvmpi") == 0) {
 			auto p = util::obs_properties_add_tristate(grp, KEY_RATECONTROL_ADAPTIVEB,
 													   D_TRANSLATE(ST_RATECONTROL_ADAPTIVEB));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_ADAPTIVEB)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_ADAPTIVEB));
 		}
 	}
 
@@ -375,7 +375,7 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p = obs_properties_add_float_slider(grp, KEY_RATECONTROL_LIMITS_QUALITY,
 													 D_TRANSLATE(ST_RATECONTROL_LIMITS_QUALITY), 0, 100, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_LIMITS_QUALITY)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_LIMITS_QUALITY));
 		}
 
 		{
@@ -396,7 +396,7 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_LIMITS_BUFFERSIZE,
 											D_TRANSLATE(ST_RATECONTROL_LIMITS_BUFFERSIZE), 0,
 											std::numeric_limits<int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_LIMITS_BUFFERSIZE)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_LIMITS_BUFFERSIZE));
 			obs_property_int_set_suffix(p, " kbit");
 		}
 	}
@@ -411,28 +411,28 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_MINIMUM,
 												   D_TRANSLATE(ST_RATECONTROL_QP_MINIMUM), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_MINIMUM)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_QP_MINIMUM));
 		}
 		{
 			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_MAXIMUM,
 												   D_TRANSLATE(ST_RATECONTROL_QP_MAXIMUM), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_MAXIMUM)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_QP_MAXIMUM));
 		}
 
 		{
 			auto p =
 				obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_RATECONTROL_QP_I), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_I)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_QP_I));
 		}
 		{
 			auto p =
 				obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_RATECONTROL_QP_P), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_P)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_QP_P));
 		}
 		{
 			auto p =
 				obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_RATECONTROL_QP_B), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_B)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_RATECONTROL_QP_B));
 		}
 	}
 
@@ -445,16 +445,16 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_AQ_SPATIAL, D_TRANSLATE(ST_AQ_SPATIAL));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AQ_SPATIAL)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_AQ_SPATIAL));
 			obs_property_set_modified_callback(p, modified_aq);
 		}
 		{
 			auto p = obs_properties_add_int_slider(grp, KEY_AQ_STRENGTH, D_TRANSLATE(ST_AQ_STRENGTH), -1, 15, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AQ_STRENGTH)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_AQ_STRENGTH));
 		}
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_AQ_TEMPORAL, D_TRANSLATE(ST_AQ_TEMPORAL));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AQ_TEMPORAL)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_AQ_TEMPORAL));
 		}
 	}
 
@@ -467,7 +467,7 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 		{
 			auto p = obs_properties_add_int_slider(grp, KEY_OTHER_BFRAMES, D_TRANSLATE(ST_OTHER_BFRAMES), -1, 4, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_BFRAMES)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_OTHER_BFRAMES));
 			obs_property_int_set_suffix(p, " frames");
 		}
 
@@ -486,31 +486,31 @@ void nvmpi::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_ZEROLATENCY, D_TRANSLATE(ST_OTHER_ZEROLATENCY));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_ZEROLATENCY)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_OTHER_ZEROLATENCY));
 		}
 
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_WEIGHTEDPREDICTION,
 													   D_TRANSLATE(ST_OTHER_WEIGHTEDPREDICTION));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_WEIGHTEDPREDICTION)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_OTHER_WEIGHTEDPREDICTION));
 		}
 
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_NONREFERENCEPFRAMES,
 													   D_TRANSLATE(ST_OTHER_NONREFERENCEPFRAMES));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_NONREFERENCEPFRAMES)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_OTHER_NONREFERENCEPFRAMES));
 		}
 
 		{
 			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_ACCESSUNITDELIMITER,
 													   D_TRANSLATE(ST_OTHER_ACCESSUNITDELIMITER));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_ACCESSUNITDELIMITER)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_OTHER_ACCESSUNITDELIMITER));
 		}
 
 		{
 			auto p = obs_properties_add_int_slider(grp, KEY_OTHER_DECODEDPICTUREBUFFERSIZE,
 												   D_TRANSLATE(ST_OTHER_DECODEDPICTUREBUFFERSIZE), -1, 16, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_DECODEDPICTUREBUFFERSIZE)));
+			obs_property_set_long_description(p, D_TRANSLATE(ST_OTHER_DECODEDPICTUREBUFFERSIZE));
 			obs_property_int_set_suffix(p, " frames");
 		}
 	}
@@ -733,7 +733,7 @@ void nvmpi::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 void nvmpi::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* context)
 {
-	using namespace ::ffmpeg;
+	using namespace ::streamfx::ffmpeg;
 
 	DLOG_INFO("[%s]   Nvidia NVMPI:", codec->name);
 	tools::print_av_option_string2(context, "preset", "    Preset",

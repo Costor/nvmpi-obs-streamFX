@@ -1,0 +1,81 @@
+ CMakeLists.txt                     | 25 +++++++++++++++++++++++++
+ source/encoders/encoder-ffmpeg.cpp |  9 +++++++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ae46d31..e94718b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -292,6 +292,7 @@ endif()
+ set(${PREFIX}ENABLE_ENCODER_FFMPEG ON CACHE BOOL "Enable FFmpeg Encoder integration.")
+ set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ON CACHE BOOL "Enable AMF Encoder in FFmpeg.")
+ set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ON CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
++set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVMPI ON CACHE BOOL "Enable NVMPI Encoder in FFmpeg.")
+ set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ON CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
+ set(${PREFIX}ENABLE_ENCODER_AOM_AV1 ON CACHE BOOL "Enable AOM AV1 Encoder.")
+ 
+@@ -663,6 +664,13 @@ function(feature_encoder_ffmpeg RESOLVE)
+ 				set_feature_disabled(ENCODER_FFMPEG_NVENC ON)
+ 			endif()
+ 
++			# NVMPI
++			is_feature_enabled(ENCODER_FFMPEG_NVMPI T_CHECK)
++			if(T_CHECK AND D_PLATFORM_MAC)
++				message(WARNING "${LOGPREFIX}: FFmpeg Encoder 'NVMPI' requires Windows or Linux. Disabling...")
++				set_feature_disabled(ENCODER_FFMPEG_NVMPI ON)
++			endif()
++
+ 			# ProRes
+ 			is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
+ 		endif()
+@@ -1358,6 +1366,23 @@ if(T_CHECK)
+ 		)
+ 	endif()
+ 
++	# NVMPI -- PST copied block NVENC and replaced NVENC->NVMPI
++	is_feature_enabled(ENCODER_FFMPEG_NVMPI T_CHECK)
++	message(STATUS "PST Line 1075: FFMPEG-nvmpi incl=${T_CHECK}")
++			if(T_CHECK)
++			list(APPEND PROJECT_PRIVATE_SOURCE
++			"source/encoders/handlers/nvmpi_shared.hpp"
++			"source/encoders/handlers/nvmpi_shared.cpp"
++			"source/encoders/handlers/nvmpi_h264_handler.hpp"
++			"source/encoders/handlers/nvmpi_h264_handler.cpp"
++			"source/encoders/handlers/nvmpi_hevc_handler.hpp"
++			"source/encoders/handlers/nvmpi_hevc_handler.cpp"
++		)
++		list(APPEND PROJECT_DEFINITIONS
++			ENABLE_ENCODER_FFMPEG_NVMPI
++		)
++	endif()
++
+ 	# ProRES
+ 	is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
+ 	if(T_CHECK)
+diff --git a/source/encoders/encoder-ffmpeg.cpp b/source/encoders/encoder-ffmpeg.cpp
+index a913cb0..3438acf 100644
+--- a/source/encoders/encoder-ffmpeg.cpp
++++ b/source/encoders/encoder-ffmpeg.cpp
+@@ -38,6 +38,11 @@
+ #include "handlers/nvenc_hevc_handler.hpp"
+ #endif
+ 
++#ifdef ENABLE_ENCODER_FFMPEG_NVMPI
++#include "handlers/nvmpi_h264_handler.hpp"
++#include "handlers/nvmpi_hevc_handler.hpp"
++#endif
++
+ #ifdef ENABLE_ENCODER_FFMPEG_PRORES
+ #include "handlers/prores_aw_handler.hpp"
+ #endif
+@@ -1167,6 +1172,10 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
+ 	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
+ 	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
+ #endif
++#ifdef ENABLE_ENCODER_FFMPEG_NVMPI
++	register_handler("h264_nvmpi", ::std::make_shared<handler::nvmpi_h264_handler>());
++	register_handler("hevc_nvmpi", ::std::make_shared<handler::nvmpi_hevc_handler>());
++#endif
+ #ifdef ENABLE_ENCODER_FFMPEG_PRORES
+ 	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
+ #endif
