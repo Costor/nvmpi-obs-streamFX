@@ -24,7 +24,7 @@ Using the built instruction provided with the packages (plus the remarks below) 
 
 - [obs-studio](https://github.com/obsproject/obs-studio) including the StreamFX plugin below:
 
- - [StreamFX](https://github.com/Xaymar/obs-StreamFX)
+- [StreamFX](https://github.com/Xaymar/obs-StreamFX)
 
 
 ### Remarks on building jetson-ffmpeg:
@@ -68,7 +68,7 @@ At this point the self built obs-studio will **not yet** offer nvidia nvmpi when
 - Search the file CMakeLists.txt for 'nvmpi' and transfer the lines over into ~/obs-studio/UI/frontend-plugins/streamfx/CMakeLists.txt, i.e. the build description of the current StreamFX, in an adequate way.
 - In ~/obs-studio/UI/frontend-plugins/streamfx/source/encoders/encoder-ffmpeg.cpp the folowing two lines need to be added directly below the corresponding #includes for nvenc, i.e. below  '#include "handlers/nvenc_hevc_handler.hpp"':
 ```
-#include "handlers/nvmpi_h264_handler.hpp" 
+#include "handlers/nvmpi_h264_handler.hpp"
 #include "handlers/nvmpi_hevc_handler.hpp"
 ```
 - and two lines below should be added in function ffmpeg_manager::ffmpeg_manager() below the line '#ifdef ENABLE_ENCODER_FFMPEG_NVENC':
@@ -89,14 +89,17 @@ Obs-studio requires OpenGL support. If you access your Linux Desktop from remote
 Attachment : complete build instructions for build without browser support
 tested with Ubuntu 20.04, OBS 27, StreamFX 0.11.0 and ffmpeg n4.2.5
 
-# set directory where you want to build everything
+### set directory where you want to build everything
+```
 bd=~/nvmpi-obs
-
-# installation of libs for full build of ffmpeg, obs and streamfx
+```
+### installation of libs for full build of ffmpeg, obs and streamfx
+```
 sudo apt build-dep ffmpeg obs-studio
 sudo apt install libpci-dev qtbase5-private-dev clang clang-tidy clang-format
-
-# download, build and install libaom
+```
+### download, build and install libaom
+```
 cd $bd
 git clone https://aomedia.googlesource.com/aom
 cd aom
@@ -105,8 +108,9 @@ cd build
 cmake ..
 make -j$(nproc)
 sudo make install
-
-# download and build jetson-ffmpeg
+```
+### download and build jetson-ffmpeg
+```
 cd $bd
 git clone https://github.com/jocover/jetson-ffmpeg.git
 cd jetson-ffmpeg
@@ -116,8 +120,9 @@ cmake ..
 make -j$(nproc)
 sudo make install
 sudo ldconfig
-
-# download and build ffmpeg (note : the build process take a while)
+```
+### download and build ffmpeg (note : the build process take a while)
+```
 cd $bd
 git clone git://source.ffmpeg.org/ffmpeg.git -b release/4.2 --depth=1
 cd ffmpeg
@@ -129,41 +134,40 @@ sudo make install
 sudo ldconfig
 
 export LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
-
-# to test it
+```
+### to test it
+```
 ffmpeg -c:v h264_nvmpi -i <input_file> -f null -
-# or
+```
+### or
+```
 ffmpeg -i <input_file> -c:v h264_nvmpi <output.mp4>
-
-# download obs and streamfx
+```
+### download obs and streamfx
+```
 cd $bd
 git clone --recursive https://github.com/obsproject/obs-studio.git
 cd obs-studio/UI/frontend-plugins
 git submodule add 'https://github.com/Xaymar/obs-StreamFX.git' streamfx
 git submodule update --init --recursive
 echo "add_subdirectory(streamfx)" >> CMakeLists.txt
-
-# download this git and patch streamfx"
-cd $bd
+```
+### download this git and patch streamfx
+```
 git clone https://github.com/Costor/nvmpi-obs-streamFX
 cd nvmpi-obs-streamFX
 git checkout StreamFX-0.11.0
 cp nvmpi_* $bd/obs-studio/UI/frontend-plugins/streamfx/source/encoders/handlers
-
-# now you have 2 options to update files
-# option 1 : use the patch
 git apply streamfx.patch --unsafe-paths --directory=$bd/obs-studio/UI/frontend-plugins/streamfx
-
-# option 2 : overwrite by copy files from this git to streamfx
-cp encoder-ffmpeg.cpp $bd/obs-studio/UI/frontend-plugins/streamfx/source
-cp CMakeLists.txt $bd/obs-studio/UI/frontend-plugins/streamfx/
-
-# build obs
+```
+### build and install obs
+```
 cd $bd/obs-studio
 mkdir build
 cd build
 cmake -DUNIX_STRUCTURE=1 -DCMAKE_INSTALL_PREFIX=/usr/local -DENABLE_PIPEWIRE=OFF -DBUILD_BROWSER=OFF -DCMAKE_CXX_FLAGS="-fPIC" ..
 make -j$(nproc)
 sudo make install
-
-# everything except of ffmpeg test and option 2 of integrating is also in complete-build.sh
+```
+everything except of ffmpeg test and option 2 of integrating is also in complete-build.sh
+in complete-build-full.sh are more options enabled in ffmpeg
