@@ -169,5 +169,5 @@ cmake -DUNIX_STRUCTURE=1 -DCMAKE_INSTALL_PREFIX=/usr/local -DENABLE_PIPEWIRE=OFF
 make -j$(nproc)
 sudo make install
 ```
-everything except of ffmpeg test and option 2 of integrating is also in complete-build.sh
+everything except of ffmpeg test is also in complete-build.sh
 in complete-build-full.sh are more options enabled in ffmpeg
