@@ -86,7 +86,7 @@ Enjoy!
 
 Obs-studio requires OpenGL support. If you access your Linux Desktop from remote (e.g. via xrdp or vnc), openGL support will be via software (MESA) or non-existent. I found that using [VirtualGL](www.virtualGL.org) obs-studio runs reasonably well in a remote xrdp session in the same LAN, see [xrdp forum](https://github.com/neutrinolabs/xrdp/issues/1697#issuecomment-806578753). 
 
-# Documentation by Amehu for StreamFX 0.11.0 (Jan 4th, 2022)
+# Documentation by Amhehu for StreamFX 0.11.0 (Jan 4th, 2022)
 complete build instructions for build without browser support
 tested with Ubuntu 20.04, OBS 27, StreamFX 0.11.0 and ffmpeg n4.2.5
 
