@@ -15,8 +15,8 @@ So as development of StreamFX, jetson-ffmpeg and obs-studio continue, you might 
 
 No jetson specific dependencies have come to my attention, so it would probably work in other environments with nvmpi encoder hardware where an integration into ffmpeg / libavcodec exists.
 
-# Documentation (Costor, March 2021, for StreamFX 0.11.0 see below)
-
+# Documentation (Costor, March 2021, for StreamFX 0.10.0.alpha1)
+(For Documentation by Amehu for StreamFX 0.11.0 see next chapter below)
 ## Prerequisite Steps
 Using the built instruction provided with the packages (plus the remarks below) you first need to download, build and deploy a working version of
 
